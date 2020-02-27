@@ -48,20 +48,44 @@ var JSquestionList = [
 ];
 
 $(document).ready(function() {
+
+    // Can be "landing", "start", or "end".
     var quizStatus = "landing";
     var timeLeft = 5;
     var score = 0;
+    var currentQuestion = 0;
 
-    $("#start-button").on("click",function() {
+    $(document).on("click", "#start-button", function() {
         quizStatus = "active";
+        shuffleArray(JSquestionList);
         $("#landing").css({ "display":"none" })
         $("#start-button").remove();
-        $("body").append("<p id=\"timer\">Time left: " + timeLeft + "</p>");
-        $("body").append("<p id=\"score\">Current score: " + score + "</p>");
-
+        $("body").append("<p id=\"timer\">Time left: " + timeLeft);
+        $("body").append("<p id=\"score\">Current score: " + score);
         startQuiz();
 
     });
+
+    $(document).on("click", ".quiz-button", function() {
+        event.preventDefault();
+        //console.log(JSquestionList[currentQuestion].correct === $(this).text());
+        console.log(JSquestionList[currentQuestion].correct);
+        console.log($(this).text());
+
+        if (JSquestionList[currentQuestion].correct === $(this).text()) {
+            score++;
+            console.log(score);
+            $("#score").text("Current score: " + score);
+            $("#result").text("Right!");
+        } else {
+            timeLeft--;
+            $("#result").text("Wrong!");
+        }
+        currentQuestion++;
+        generateQuestion();
+
+        //console.log(JSquestionList[currentQuestion].correct == $(this).text());
+    })
 
     // Input: array of answers
     // Returns: array of selected answers
@@ -73,8 +97,8 @@ $(document).ready(function() {
         }
         for (var i = 0; i < 3; i++) {
             selected.push(answers.splice(Math.floor(Math.random() * answers.length),1)[0]);
-            console.log(selected);
         }
+        return selected;
     }
 
     // Gratuitously copied from Lauren Holst's answer on https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
@@ -88,39 +112,33 @@ $(document).ready(function() {
             var temp = array[i];
             array[i] = array[j];
             array[j] = temp;
-            console.log(array);
         }
+        return array;
     }
 
     // Input: an array of 'quiz questions', which are objects containing a question, correct answer, and incorrect answers
     // Returns: nothing
     // Removes the current quiz question and answers from the page, chooses a random quiz question (and removes it), 
 
-    function generateQuestion(quizQuestions) {
+    function generateQuestion() {
         // Chooses a random question that has not already been asked
-        var question = quizQuestions.splice(Math.floor(Math.random() * quizQuestions.length))[0];
+        var selected = JSquestionList[currentQuestion];
 
         // Creates a randomized list of answers containing 1 correct answer and up to 3 incorrect answers
-        var answerList = shuffleArray([question.correct].concat(addRandomAnswers(question.incorrect)));
+        var answerList = shuffleArray([selected.correct].concat(addRandomAnswers(selected.incorrect)));
         
-
-        // 
-        
-
         $("#quiz").remove();
-        $(".quiz-buttons").remove();
-        $("body").append("<br>");
-        $("body").append("<div id=\"quiz\"></div>")
-        
-        
+        $(".quiz-button").remove();
 
-    
+        $("body").append("<div id=\"quiz\"></div>");
+
+        $("#quiz").append("<p id =\"question\">" + selected.question);
+
+        for (var i = 0; i < answerList.length; i++) {
+            $("#quiz").append("<button class=\"btn-primary btn py-0 my-1 quiz-button\">" + answerList[i] + "</button><br>");
+        }
+        $("#quiz").append("<p id=\"result\">");
     }
-
-    var q = JSquestionList[0];
-
-    console.log(q.correct);
-    console.log(addRandomAnswers(q.incorrect));
 
     function startQuiz() {
         quizStatus = "active";
@@ -131,14 +149,20 @@ $(document).ready(function() {
           timeLeft--;
           $("#timer").text("Time left: " + timeLeft);
       
-          if((timeLeft === 0) || (quizStatus == "allanswered")) {
+          if((timeLeft < 1) || (quizStatus == "allanswered")) {
             clearInterval(timerInterval);
-            quizStatus = "end";
+            alert("Quiz over");
+            endQuiz();
             // endQuiz();
           }
       
         }, 1000);
       }
+
+    function endQuiz() {
+        quizStatus = "end";
+
+    }
 
 
 })
