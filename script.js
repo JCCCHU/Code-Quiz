@@ -51,7 +51,7 @@ $(document).ready(function() {
 
     // Can be "landing", "start", or "end".
     var quizStatus = "landing";
-    var timeLeft = 99;
+    var timeLeft = 3;
     var score = 0;
     var currentQuestion = 0;
 
@@ -80,13 +80,37 @@ $(document).ready(function() {
             result = "Right!";
         } else {
             timeLeft--;
+            $("#timer").text("Time left: " + timeLeft);
             result = "Wrong!";
         }
         currentQuestion++;
-        generateQuestion();
-        $("#result").text(result);
-
+        if (JSquestionList.length <= currentQuestion) {
+            endQuiz();
+        } else {
+            generateQuestion();
+            $("#result").text(result);
+        }
         //console.log(JSquestionList[currentQuestion].correct == $(this).text());
+    })
+
+    $(document).on("click", "#add-score", function() {
+        event.preventDefault();
+        var player = $("#score-input").val().trim();
+        console.log(player);
+        if (localStorage.getItem('score') === null) {
+            var scoreList = {};
+            scoreList[player] = score;
+            console.log(scoreList);
+            localStorage.setItem('score', JSON.stringify(scoreList));
+        } else {
+            var scoreList = JSON.parse(localStorage.getItem('score'));
+            scoreList[player] = score;
+            console.log(scoreList);
+            localStorage.setItem('score', JSON.stringify(scoreList));
+        }
+        renderScore();
+        $("#score-form").remove();
+
     })
 
     // Input: array of answers
@@ -153,7 +177,7 @@ $(document).ready(function() {
       
           if((timeLeft < 1) || (quizStatus == "allanswered")) {
             clearInterval(timerInterval);
-            alert("Quiz over");
+            timeLeft = 0;
             endQuiz();
             // endQuiz();
           }
@@ -161,8 +185,30 @@ $(document).ready(function() {
         }, 1000);
       }
 
+    function renderScore() {
+        $("#scorelist").remove();
+        $("body").append("<div id=\"scorelist\">");
+        if (localStorage.getItem('score') === null) {
+            $("#scorelist").append("<p>There aren't any scores to display.");
+        } else {
+            scoreboard = JSON.parse(localStorage.getItem('score'));
+            for (var entry in scoreboard) {
+                if (Object.prototype.hasOwnProperty.call(scoreboard, entry)) {
+                    $("#scorelist").append("<p>" + entry + ": " + scoreboard[entry] + "<br>");
+                }
+            }
+        }
+    }
+
     function endQuiz() {
         quizStatus = "end";
+        $("#quiz").remove();
+        $(".quiz-button").remove();
+
+        renderScore();
+
+        $("body").append("<div id=\"game-over\">Your final score was: " + score + "<br><br>");
+        $("body").append("<form id=\"score-form\"><label>Your name: </label><input type=\"text\" id=\"score-input\"><input id=\"add-score\" type=\"submit\" value=\"Add score\"></form>");
 
     }
 
