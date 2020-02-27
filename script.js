@@ -51,6 +51,7 @@ $(document).ready(function() {
 
     // Can be "landing", "start", or "end".
     var quizStatus = "landing";
+    var timerInterval;
     // Starts the user off with a timer length 8 seconds per question.
     var timeLeft = JSquestionList.length * 8;
     var score = 0;
@@ -76,16 +77,18 @@ $(document).ready(function() {
         event.preventDefault();
 
         // Compares the button content to the text of the correct answer of the current question
-        // If correct, score is increased and updated
+        // If correct, score is increased and updated, and time is slightly increased
         // If incorrect, time is decreased and updated
         // After that, the question index is incremented and the next question is generated
         if (JSquestionList[currentQuestion].correct === $(this).text()) {
             score++;
+            timeLeft += 5
             console.log(score);
+            $("#timer").text("Time left: " + timeLeft);
             $("#score").text("Current score: " + score);
             result = "Right!";
         } else {
-            timeLeft -= 5;
+            timeLeft -= 15;
             if (timeLeft < 0) {
                 timeLeft = 0;
             }
@@ -96,6 +99,13 @@ $(document).ready(function() {
         if (JSquestionList.length <= currentQuestion) {
             // Rewards the player for answering all questions quickly, but it won't be better than randomly guessing
             score += timeLeft / 10;
+            quizStatus = "finished";
+            clearInterval(timerInterval);
+            endQuiz();
+        } else if (timeLeft <= 0) {
+            timeLeft = 0;
+            $("#result".text(result));
+            clearInterval(timerInterval);
             endQuiz();
         } else {
             generateQuestion();
@@ -177,15 +187,17 @@ $(document).ready(function() {
     function startQuiz() {
         quizStatus = "active";
         generateQuestion();
-        var timerInterval = setInterval(function() {
+        timerInterval = setInterval(function() {
           timeLeft--;
           $("#timer").text("Time left: " + timeLeft);
 
-          // For whatever reason, if the timer reaches the quiz ends
-          if((timeLeft < 1) || (quizStatus == "allanswered")) {
+          // For whatever reason, if the timer reaches 0 the quiz ends
+          if(timeLeft < 1) {
             clearInterval(timerInterval);
-            timeLeft = 0;
-            endQuiz();
+            if (timeLeft < 1) {
+                timeLeft = 0;
+                endQuiz();
+            };
             // endQuiz();
           }
       
