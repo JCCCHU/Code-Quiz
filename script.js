@@ -51,7 +51,7 @@ $(document).ready(function() {
 
     // Can be "landing", "start", or "end".
     var quizStatus = "landing";
-    var timeLeft = 5;
+    var timeLeft = 99;
     var score = 0;
     var currentQuestion = 0;
 
@@ -67,6 +67,7 @@ $(document).ready(function() {
     });
 
     $(document).on("click", ".quiz-button", function() {
+        var result = "";
         event.preventDefault();
         //console.log(JSquestionList[currentQuestion].correct === $(this).text());
         console.log(JSquestionList[currentQuestion].correct);
@@ -76,13 +77,14 @@ $(document).ready(function() {
             score++;
             console.log(score);
             $("#score").text("Current score: " + score);
-            $("#result").text("Right!");
+            result = "Right!";
         } else {
             timeLeft--;
-            $("#result").text("Wrong!");
+            result = "Wrong!";
         }
         currentQuestion++;
         generateQuestion();
+        $("#result").text(result);
 
         //console.log(JSquestionList[currentQuestion].correct == $(this).text());
     })
