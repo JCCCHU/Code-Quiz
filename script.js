@@ -51,7 +51,7 @@ $(document).ready(function() {
 
     // Can be "landing", "start", or "end".
     var quizStatus = "landing";
-    var timeLeft = 3;
+    var timeLeft = JSquestionList.length * 8;
     var score = 0;
     var currentQuestion = 0;
 
@@ -79,12 +79,14 @@ $(document).ready(function() {
             $("#score").text("Current score: " + score);
             result = "Right!";
         } else {
-            timeLeft--;
+            timeLeft -= 5;
             $("#timer").text("Time left: " + timeLeft);
             result = "Wrong!";
         }
         currentQuestion++;
         if (JSquestionList.length <= currentQuestion) {
+            // Rewards the player for answering all questions quickly, but it won't be better than randomly guessing
+            score += timeLeft / 10;
             endQuiz();
         } else {
             generateQuestion();
