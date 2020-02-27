@@ -51,28 +51,34 @@ $(document).ready(function() {
 
     // Can be "landing", "start", or "end".
     var quizStatus = "landing";
+    // Starts the user off with a timer length 8 seconds per question.
     var timeLeft = JSquestionList.length * 8;
     var score = 0;
     var currentQuestion = 0;
 
+    //Prepares the website for the quiz to begin
     $(document).on("click", "#start-button", function() {
         quizStatus = "active";
+        //Shuffles the question list in place, so the question order is different each time
         shuffleArray(JSquestionList);
+        //Hides the landing, if it is not already invisible
         $("#landing").css({ "display":"none" })
         $("#start-button").remove();
         $("body").append("<p id=\"timer\">Time left: " + timeLeft);
         $("body").append("<p id=\"score\">Current score: " + score);
         startQuiz();
-
     });
 
+    //.quiz-buttons are quiz answers
     $(document).on("click", ".quiz-button", function() {
+        // Saves the result for display after the next question is generated
         var result = "";
         event.preventDefault();
-        //console.log(JSquestionList[currentQuestion].correct === $(this).text());
-        console.log(JSquestionList[currentQuestion].correct);
-        console.log($(this).text());
 
+        // Compares the button content to the text of the correct answer of the current question
+        // If correct, score is increased and updated
+        // If incorrect, time is decreased and updated
+        // After that, the question index is incremented and the next question is generated
         if (JSquestionList[currentQuestion].correct === $(this).text()) {
             score++;
             console.log(score);
@@ -80,6 +86,9 @@ $(document).ready(function() {
             result = "Right!";
         } else {
             timeLeft -= 5;
+            if (timeLeft < 0) {
+                timeLeft = 0;
+            }
             $("#timer").text("Time left: " + timeLeft);
             result = "Wrong!";
         }
@@ -95,6 +104,7 @@ $(document).ready(function() {
         //console.log(JSquestionList[currentQuestion].correct == $(this).text());
     })
 
+    // High score submission functionality, using local storage
     $(document).on("click", "#add-score", function() {
         event.preventDefault();
         var player = $("#score-input").val().trim();
@@ -118,6 +128,7 @@ $(document).ready(function() {
     // Input: array of answers
     // Returns: array of selected answers
     // Randomly selects 3 elements. If there are 3 or fewer elements they are all selected.
+    // Used for shuffling questions and answers
     function addRandomAnswers(answers) {
         var selected = [];
         if (answers.length <= 3) {
@@ -133,6 +144,7 @@ $(document).ready(function() {
     
     // Randomize array element order in-place.
     // Using Durstenfeld shuffle algorithm.
+    // Will also return the shuffled array
 
     function shuffleArray(array) {
         for (var i = array.length - 1; i > 0; i--) {
@@ -144,12 +156,8 @@ $(document).ready(function() {
         return array;
     }
 
-    // Input: an array of 'quiz questions', which are objects containing a question, correct answer, and incorrect answers
-    // Returns: nothing
-    // Removes the current quiz question and answers from the page, chooses a random quiz question (and removes it), 
-
+    // Removes the current quiz question and answers from the page and displays the next set of questions and answers 
     function generateQuestion() {
-        // Chooses a random question that has not already been asked
         var selected = JSquestionList[currentQuestion];
 
         // Creates a randomized list of answers containing 1 correct answer and up to 3 incorrect answers
@@ -157,26 +165,23 @@ $(document).ready(function() {
         
         $("#quiz").remove();
         $(".quiz-button").remove();
-
         $("body").append("<div id=\"quiz\"></div>");
-
         $("#quiz").append("<p id =\"question\">" + selected.question);
-
         for (var i = 0; i < answerList.length; i++) {
             $("#quiz").append("<button class=\"btn-primary btn py-0 my-1 quiz-button\">" + answerList[i] + "</button><br>");
         }
         $("#quiz").append("<p id=\"result\">");
     }
 
+    // Initializes the timer and generates the first question.
     function startQuiz() {
         quizStatus = "active";
-        
         generateQuestion();
-
         var timerInterval = setInterval(function() {
           timeLeft--;
           $("#timer").text("Time left: " + timeLeft);
-      
+
+          // For whatever reason, if the timer reaches the quiz ends
           if((timeLeft < 1) || (quizStatus == "allanswered")) {
             clearInterval(timerInterval);
             timeLeft = 0;
@@ -187,6 +192,7 @@ $(document).ready(function() {
         }, 1000);
       }
 
+    // Updates the current scoreboard
     function renderScore() {
         $("#scorelist").remove();
         $("body").append("<div id=\"scorelist\">");
@@ -202,6 +208,7 @@ $(document).ready(function() {
         }
     }
 
+    // Ends the quiz by removing the quiz sections, displays the local scores, and allows the user to enter their high score
     function endQuiz() {
         quizStatus = "end";
         $("#quiz").remove();
